@@ -28,8 +28,6 @@
 /* Size of struct skipcell, in bytes, without the forward array */
 #define SIZEOF_SKIPCELL sizeof(struct skipcell)
 
-#ifdef DEBUG
-
 /* So that whatever reads a cell back -- a debugger on a core, say -- can have
    the stamp from the image rather than a copy of it. */
 CAMLexport const uintnat caml_skipcell_stamp = SKIPCELL_STAMP;
@@ -45,10 +43,6 @@ void caml_skiplist_check(struct skiplist * sk, const char * what)
                          what, (void *) e, e->key, Skipcell_key_of_check(e));
     })
 }
-
-#else
-#define Set_check(f) ((void) 0)
-#endif /* DEBUG */
 
 /* Generate a random level for a new node: 0 with probability 3/4,
    1 with probability 3/16, 2 with probability 3/64, etc.
