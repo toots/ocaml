@@ -323,8 +323,7 @@ external compact : unit -> unit = "caml_gc_compaction"
 
 external check_roots : unit -> unit = "caml_check_global_roots"
 (** Check the C global roots for damage, and fail naming the root and the code
-    that registered it. What it reads is kept only by a runtime built for
-    debugging; anywhere else it returns without looking.
+    that registered it.
 
     A root broken by a stray write is found by the collector walking it, which
     can be long afterwards; calling this between steps narrows down which one

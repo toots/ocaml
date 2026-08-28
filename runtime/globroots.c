@@ -34,7 +34,6 @@ static caml_plat_mutex roots_mutex = CAML_PLAT_MUTEX_INITIALIZER;
 /* Greater than zero when the current thread is scanning the roots */
 static CAMLthread_local int iterating_roots = 0;
 
-#ifdef DEBUG
 /* The root being handed to the collector, or NULL. A root holding a value that
    is no longer one takes the collector down with it, somewhere that names only
    the collector; this says which root it was. Per thread, domains scanning at
@@ -42,10 +41,6 @@ static CAMLthread_local int iterating_roots = 0;
 CAMLexport CAMLthread_local value * caml_root_being_scanned = NULL;
 #define Begin_scanning(r) (caml_root_being_scanned = (r))
 #define End_scanning() (caml_root_being_scanned = NULL)
-#else
-#define Begin_scanning(r) ((void) 0)
-#define End_scanning() ((void) 0)
-#endif
 
 enum { ROOT_PRESENT = 0, ROOT_DELETED = 1 };
 
@@ -72,13 +67,11 @@ struct skiplist caml_global_roots_old = SKIPLIST_STATIC_INITIALIZER;
      then neither [caml_global_roots_young] nor [caml_global_roots_old] contain
      it. */
 
-#if defined(DEBUG) && (defined(__GNUC__) || defined(__clang__))
+#if defined(__GNUC__) || defined(__clang__)
 #define Caller_pc __builtin_return_address(0)
 #else
 #define Caller_pc NULL
 #endif
-
-#ifdef DEBUG
 
 /* Where each root was registered from, so a root found broken can name the
    code that owns it. */
@@ -127,14 +120,6 @@ static void check_root(struct skipcell * e, value * r)
                    caml_global_root_origin((value *) Skipcell_key_of_check(e)),
                    (void *) r);
 }
-
-#else
-
-#define record_root_origin(r, pc) ((void) (pc))
-#define forget_root_origin(r) ((void) 0)
-#define check_root(e, r) ((void) 0)
-
-#endif /* DEBUG */
 
 /* Insertion and deletion */
 
@@ -337,13 +322,11 @@ Caml_inline void caml_iterate_global_roots(scanning_action f,
    own steps damages one. */
 CAMLprim value caml_check_global_roots(value unit)
 {
-#ifdef DEBUG
   caml_plat_lock_blocking(&roots_mutex);
   caml_skiplist_check(&caml_global_roots, "caml_global_roots");
   caml_skiplist_check(&caml_global_roots_young, "caml_global_roots_young");
   caml_skiplist_check(&caml_global_roots_old, "caml_global_roots_old");
   caml_plat_unlock(&roots_mutex);
-#endif
   return Val_unit;
 }
 
